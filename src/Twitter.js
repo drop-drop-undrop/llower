@@ -163,7 +163,7 @@ const twitter = (() => {
           },
           body: Object.entries({
             client_id: 'QlMyWExoOGtPZmtJSkhISDBuSDk6MTpjaQ',
-            redirect_uri: 'http://localhost:3000',
+            redirect_uri: 'https://drop-drop-undrop.github.io',
             grant_type: 'authorization_code',
             code: passedInCode,
             code_verifier: codeChallenge,
@@ -204,7 +204,7 @@ const twitter = (() => {
       const url = new URL('https://twitter.com/i/oauth2/authorize')
       const clientId = 'QlMyWExoOGtPZmtJSkhISDBuSDk6MTpjaQ'
       url.searchParams.set('client_id', clientId)
-      const redirectUri = 'http://localhost:3000'
+      const redirectUri = 'https://drop-drop-undrop.github.io'
       url.searchParams.set('redirect_uri', redirectUri)
       const responseType = 'code'
       url.searchParams.set('response_type', responseType)
