@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import Loading from './Loading'
-import { Twitter, useTwitter } from './Twitter'
+import { useAppData } from './app_data'
+import Loading from './loading'
 
 export default function App() {
   return (
-    <Twitter>
-      <Loading>
-        <Title />
-        <Description />
-      </Loading>
-    </Twitter>
+    <Loading>
+      <Title />
+      <Description />
+    </Loading>
   )
 }
 
@@ -52,20 +50,20 @@ const Heading = styled.div(({ z }) => ({
 }))
 
 function Description() {
-  const twitter = useTwitter()
-  const [status, setStatus] = useState(null)
+  const appData = useAppData()
+  const [tokens, setTokens] = useState(null)
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    twitter.subscribeToTokens(setStatus)
-    twitter.subscribeToUser(setUser)
+    appData.subscribeToTokens(setTokens)
+    appData.subscribeToUser(setUser)
     return () => {
-      twitter.unsubscribeFromUser(setUser)
-      twitter.unsubscribeFromTokens(setStatus)
+      appData.unsubscribeFromUser(setUser)
+      appData.unsubscribeFromTokens(setTokens)
     }
-  }, [twitter])
+  }, [appData])
 
-  if (!status) {
+  if (!tokens) {
     return (
       <Center>
         <Column>
@@ -256,12 +254,12 @@ const Column = styled.div({
 })
 
 function LoginButton({ style }) {
-  const twitter = useTwitter()
+  const appData = useAppData()
 
   return (
     <Button
       type="button"
-      onClick={twitter.requestAuthorization}
+      onClick={appData.requestAuthorization}
       style={style || {
         fontSize: '0.9em',
         fontWeight: 'bold',
@@ -273,21 +271,21 @@ function LoginButton({ style }) {
 }
 
 function FollowButton({ style }) {
-  const twitter = useTwitter()
-  const [following, setFollowing] = useState(null)
+  const appData = useAppData()
+  const [isFollowing, setIsFollowing] = useState(null)
 
   useEffect(() => {
-    twitter.subscribeToFollowing(setFollowing)
+    appData.subscribeToIsFollowing(setIsFollowing)
     return () => {
-      twitter.unsubscribeFromFollowing(setFollowing)
+      appData.unsubscribeFromIsFollowing(setIsFollowing)
     }
-  }, [twitter])
+  }, [appData])
 
-  if (!following) {
+  if (!isFollowing) {
     return (
       <Button
         type="button"
-        onClick={twitter.requestFollowingOfNasa}
+        onClick={appData.requestFollowingOfNasa}
         style={style || {
           fontSize: '0.9em',
           fontWeight: 'bold',
@@ -300,7 +298,7 @@ function FollowButton({ style }) {
     return (
       <Button
         type="button"
-        onClick={twitter.requestUnfollowingOfNasa}
+        onClick={appData.requestUnfollowingOfNasa}
         style={style || {
           fontSize: '0.9em',
           fontWeight: 'bold',
@@ -313,12 +311,12 @@ function FollowButton({ style }) {
 }
 
 function LogoutButton({ style }) {
-  const twitter = useTwitter()
+  const appData = useAppData()
 
   return (
     <Button
       type="button"
-      onClick={twitter.requestDeauthorization}
+      onClick={appData.requestRevocationOfTokens}
       style={style || {
         fontSize: '0.9em',
         fontWeight: 'bold',

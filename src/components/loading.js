@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
-import { useTwitter } from './Twitter'
+import { useAppData } from './app_data'
 
 function Loading({ children }) {
-  const twitter = useTwitter()
+  const appData = useAppData()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    twitter.subscribeToLoading(setLoading)
+    appData.subscribeToIsLoading(setLoading)
     return () => {
-      twitter.unsubscribeFromLoading(setLoading)
+      appData.unsubscribeFromIsLoading(setLoading)
     }
-  }, [twitter])
+  }, [appData])
 
   return (
     <>
