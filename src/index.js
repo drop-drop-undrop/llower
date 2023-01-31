@@ -1,26 +1,28 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './components/app'
-import { AppData } from './components/app_data'
-import AddressBar from './handlers/address_bar'
-import Collection from './handlers/collection'
-import Guard from './handlers/guard'
+import PageAddress from './handlers/page_address'
+import Coordinator from './handlers/coordinator'
 import RNG from './handlers/rng'
 import Storage from './handlers/storage'
 import Twitter from './handlers/twitter'
 import reportWebVitals from './reportWebVitals'
 
-const twitter = Twitter()
-const guard = Guard(twitter)
-const addressBar = AddressBar(guard)
-const storage = Storage(addressBar)
-const rng = RNG(storage)
-const collection = Collection(rng)
+const pipe = (stages = []) => {
+  const prefix = (a, b) => () => b(a())
+  const build = stages.reduceRight(prefix)
+  return build()
+}
+const handler = pipe([
+  Coordinator,
+  RNG,
+  Storage,
+  PageAddress,
+  Twitter,
+])
 const app = (
   <React.StrictMode>
-    <AppData handler={collection}>
-      <App />
-    </AppData>
+    <App handler={handler} />
   </React.StrictMode>
 )
 

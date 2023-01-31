@@ -1,4 +1,4 @@
-export default function AddressBar(handler = {}) {
+export default function PageAddress(handler = {}) {
   async function requestAuthorization({
     state,
     codeChallenge,
@@ -21,47 +21,41 @@ export default function AddressBar(handler = {}) {
 
       setTimeout(() => window.location.assign(url), 0)
 
-      return {
-        ifUnauthorized: (handle) => { },
-        ifOk: (handle) => { handle() },
-        ifNotOk: (handle) => { },
-      }
+      return { ok: true }
     } catch (error) {
       return {
-        ifUnauthorized: (handle) => { },
-        ifOk: (handle) => { },
-        ifNotOk: (handle) => {
-          handle(error.message)
-        },
+        ok: false,
+        message: error.message,
       }
     }
   }
 
-  async function requestTokens({
-    savedState,
-    codeChallenge,
-  }) {
+  async function requestAuthorizationEffect() {
+    const url = new URL(window.location.href)
+    const givenState = url.searchParams.get('state')
+    const code = url.searchParams.get('code')
+
+    return {
+      ok: true,
+      givenState,
+      code,
+    }
+  }
+
+  async function requestAuthorizationEffectRemoval() {
     const url = new URL(window.location.href)
     url.searchParams.delete('error')
-    const givenState = url.searchParams.get('state')
     url.searchParams.delete('state')
-    const code = url.searchParams.get('code')
     url.searchParams.delete('code')
     window.history.replaceState({}, '', url)
 
-    const response = await handler.requestTokens({
-      savedState,
-      codeChallenge,
-      givenState,
-      code,
-    })
-
-    return response
+    return { ok: true }
   }
 
   return {
     ...handler,
     requestAuthorization,
-    requestTokens,
+    requestAuthorizationEffect,
+    requestAuthorizationEffectRemoval,
   }
 }

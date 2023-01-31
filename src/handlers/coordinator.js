@@ -1,44 +1,74 @@
-export default function Collection(handler = {}) {
+export default function Coordinator(handler = {}) {
+  const _tokens = ValueNotifier()
+  const _user = ValueNotifier()
+  const _isFollowing = ValueNotifier()
   const _works = ValueNotifier({})
   const _isLoading = _works.map((newWorks) => {
     if (Object.keys(newWorks).length === 0) {
       return false
     } else {
-      return Object.values(newWorks)
-        .reduce((prev, current) => prev || current)
+      const compare = (a, b) => a || b
+      const values = Object.values(newWorks)
+      return values.reduce(compare)
     }
   })
 
-  const _tokens = ValueNotifier()
-  const _user = ValueNotifier()
-  const _isFollowing = ValueNotifier()
-  const _clear = () => {
+  async function _clear() {
     _tokens.value = null
     _user.value = null
     _isFollowing.value = null
   }
 
-  async function requestDump() {
+  async function _recover() {
     _works.value = {
       ..._works.value,
-      requestingDump: true,
+      recovering: true,
     }
 
-    const response = await handler.requestDump()
+    const recordsResponse = await handler.requestRecords()
+    if (recordsResponse.ok) {
+      _tokens.value = recordsResponse.tokens
+      _user.value = recordsResponse.user
+      _isFollowing.value = recordsResponse.isFollowing
+    }
 
-    response.ifOk(({ tokens, user, isFollowing }) => {
-      _tokens.value = tokens
-      _user.value = user
-      _isFollowing.value = isFollowing
-    })
+    const effectResponse = await handler.requestAuthorizationEffect()
+    await handler.requestAuthorizationEffectRemoval()
+    if (
+      effectResponse.ok
+      && effectResponse.savedState
+      && effectResponse.codeChallenge
+      && effectResponse.givenState
+      && effectResponse.code
+      && effectResponse.savedState === effectResponse.givenState
+    ) {
+      const tokensResponse = await handler.requestTokens({
+        codeChallenge: effectResponse.codeChallenge,
+        code: effectResponse.code,
+      })
+      if (tokensResponse.unauthorized) {
+        _clear()
+      } else if (tokensResponse.ok) {
+        _tokens.value = tokensResponse.tokens
+
+        const userResponse = await handler.requestUser({
+          tokens: _tokens.value,
+        })
+        if (userResponse.unauthorized) {
+          _clear()
+        } else if (userResponse.ok) {
+          _user.value = userResponse.user
+        }
+      }
+    }
 
     _works.value = {
       ..._works.value,
-      requestingDump: false,
+      recovering: false,
     }
   }
 
-  setTimeout(requestDump, 0)
+  setTimeout(_recover, 0)
 
   async function requestAuthorization() {
     _works.value = {
@@ -54,55 +84,12 @@ export default function Collection(handler = {}) {
     }
   }
 
-  async function requestTokens() {
-    _works.value = {
-      ..._works.value,
-      requestingTokens: true,
-    }
-
-    const response = await handler.requestTokens()
-
-    response.ifUnauthorized(_clear)
-    response.ifOk((newTokens) => { _tokens.value = newTokens })
-
-    _works.value = {
-      ..._works.value,
-      requestingTokens: false,
-    }
-  }
-
-  setTimeout(async () => {
-    await requestTokens()
-    if (_tokens.value && !_user.value) {
-      await requestUser()
-    }
-  }, 0)
-
-  async function requestRevocationOfTokens() {
+  async function requestDeauthorization() {
     setTimeout(_clear, 0)
 
-    await handler.requestRevocationOfTokens({
+    await handler.requestDeauthorization({
       tokens: _tokens.value,
     })
-  }
-
-  async function requestUser() {
-    _works.value = {
-      ..._works.value,
-      requestingUser: true,
-    }
-
-    const response = await handler.requestUser({
-      tokens: _tokens.value,
-    })
-
-    response.ifUnauthorized(_clear)
-    response.ifOk((newUser) => { _user.value = newUser })
-
-    _works.value = {
-      ..._works.value,
-      requestingUser: false,
-    }
   }
 
   async function requestFollowingOfNasa() {
@@ -116,8 +103,11 @@ export default function Collection(handler = {}) {
       user: _user.value,
     })
 
-    response.ifUnauthorized(_clear)
-    response.ifOk(() => { _isFollowing.value = true })
+    if (response.unauthorized) {
+      _clear()
+    } else if (response.ok) {
+      _isFollowing.value = true
+    }
 
     _works.value = {
       ..._works.value,
@@ -136,8 +126,11 @@ export default function Collection(handler = {}) {
       user: _user.value,
     })
 
-    response.ifUnauthorized(_clear)
-    response.ifOk(() => { _isFollowing.value = false })
+    if (response.unauthorized) {
+      _clear()
+    } else if (response.ok) {
+      _isFollowing.value = false
+    }
 
     _works.value = {
       ..._works.value,
@@ -148,9 +141,7 @@ export default function Collection(handler = {}) {
   return {
     ...handler,
     requestAuthorization,
-    requestTokens,
-    requestRevocationOfTokens,
-    requestUser,
+    requestDeauthorization,
     requestFollowingOfNasa,
     requestUnfollowingOfNasa,
     subscribeToIsLoading: _isLoading.subscribe,

@@ -20,8 +20,7 @@ export function useAppData() {
 
 const context = createContext({
   requestAuthorization: () => { },
-  requestTokens: () => { },
-  requestRevocationOfTokens: () => { },
+  requestDeauthorization: () => { },
   requestUser: () => { },
   requestFollowingOfNasa: () => { },
   requestUnfollowingOfNasa: () => { },

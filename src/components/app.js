@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { useAppData } from './app_data'
+import { AppData, useAppData } from './app_data'
 import Loading from './loading'
 
-export default function App() {
+export default function App({ handler }) {
   return (
-    <Loading>
-      <Title />
-      <Description />
-    </Loading>
+    <AppData handler={handler}>
+      <Loading>
+        <Title />
+        <Description />
+      </Loading>
+    </AppData>
   )
 }
 
@@ -316,7 +318,7 @@ function LogoutButton({ style }) {
   return (
     <Button
       type="button"
-      onClick={appData.requestRevocationOfTokens}
+      onClick={appData.requestDeauthorization}
       style={style || {
         fontSize: '0.9em',
         fontWeight: 'bold',

@@ -5,18 +5,30 @@ export default function Storage(handler = {}) {
     localStorage.removeItem('is_following')
   }
 
-  async function requestDump() {
+  async function requestRecords() {
     return {
-      ifUnauthorized: (handle) => { },
-      ifOk: (handle) => {
-        handle({
-          tokens: JSON.parse(localStorage.getItem('tokens')),
-          user: JSON.parse(localStorage.getItem('user')),
-          isFollowing: localStorage.getItem('is_following') === 'true',
-        })
-      },
-      ifNotOk: (handle) => { },
+      ok: true,
+      tokens: JSON.parse(localStorage.getItem('tokens')),
+      user: JSON.parse(localStorage.getItem('user')),
+      isFollowing: localStorage.getItem('is_following') === 'true',
     }
+  }
+  async function requestTokens({ codeChallenge, code }) {
+    const response = await handler.requestTokens({
+      codeChallenge,
+      code,
+    })
+
+    if (response.unauthorized) {
+      _clear()
+    } else if (response.ok) {
+      localStorage.setItem(
+        'tokens',
+        JSON.stringify(response.tokens),
+      )
+    }
+
+    return response
   }
 
   async function requestAuthorization({
@@ -34,29 +46,32 @@ export default function Storage(handler = {}) {
     return response
   }
 
-  async function requestTokens() {
+  async function requestAuthorizationEffect() {
     const savedState = localStorage.getItem('state')
-    localStorage.removeItem('state')
     const codeChallenge = localStorage.getItem('code_challenge')
-    localStorage.removeItem('code_challenge')
 
-    const response = await handler.requestTokens({
+    const response = await handler.requestAuthorizationEffect()
+
+    return {
+      ...response,
       savedState,
       codeChallenge,
-    })
+    }
+  }
 
-    response.ifUnauthorized(_clear)
-    response.ifOk((newTokens) => {
-      localStorage.setItem('tokens', JSON.stringify(newTokens))
-    })
+  async function requestAuthorizationEffectRemoval() {
+    localStorage.removeItem('state')
+    localStorage.removeItem('code_challenge')
+
+    const response = await handler.requestAuthorizationEffectRemoval()
 
     return response
   }
 
-  async function requestRevocationOfTokens({ tokens }) {
+  async function requestDeauthorization({ tokens }) {
     setTimeout(_clear, 0)
 
-    const response = handler.requestRevocationOfTokens({ tokens })
+    const response = await handler.requestDeauthorization({ tokens })
 
     return response
   }
@@ -64,10 +79,14 @@ export default function Storage(handler = {}) {
   async function requestUser({ tokens }) {
     const response = await handler.requestUser({ tokens })
 
-    response.ifUnauthorized(_clear)
-    response.ifOk((newUser) => {
-      localStorage.setItem('user', JSON.stringify(newUser))
-    })
+    if (response.unauthorized) {
+      _clear()
+    } else if (response.ok) {
+      localStorage.setItem(
+        'user',
+        JSON.stringify(response.user),
+      )
+    }
 
     return response
   }
@@ -78,8 +97,14 @@ export default function Storage(handler = {}) {
       user,
     })
 
-    response.ifUnauthorized(_clear)
-    response.ifOk(() => localStorage.setItem('is_following', true))
+    if (response.unauthorized) {
+      _clear()
+    } else if (response.ok) {
+      localStorage.setItem(
+        'is_following',
+        true,
+      )
+    }
 
     return response
   }
@@ -90,18 +115,26 @@ export default function Storage(handler = {}) {
       user,
     })
 
-    response.ifUnauthorized(_clear)
-    response.ifOk(() => localStorage.setItem('is_following', false))
+    if (response.unauthorized) {
+      _clear()
+    } else if (response.ok) {
+      localStorage.setItem(
+        'is_following',
+        false,
+      )
+    }
 
     return response
   }
 
   return {
     ...handler,
-    requestDump,
-    requestAuthorization,
+    requestRecords,
     requestTokens,
-    requestRevocationOfTokens,
+    requestAuthorization,
+    requestAuthorizationEffect,
+    requestAuthorizationEffectRemoval,
+    requestDeauthorization,
     requestUser,
     requestFollowingOfNasa,
     requestUnfollowingOfNasa,

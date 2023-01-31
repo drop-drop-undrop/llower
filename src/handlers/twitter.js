@@ -30,48 +30,30 @@ export default function Twitter() {
       })
 
       if (response.status === 401) {
-        const text = await response.text()
-
         return {
-          ifUnauthorized: async (handle) => {
-            handle(text)
-          },
-          ifOk: (handle) => { },
-          ifNotOk: (handle) => { },
+          unauthorized: true,
+          message: await response.text(),
         }
       } else if (response.status === 200) {
-        const tokens = await response.json()
-
         return {
-          ifUnauthorized: (handle) => { },
-          ifOk: async (handle) => {
-            handle(tokens)
-          },
-          ifNotOk: (handle) => { },
+          ok: true,
+          tokens: await response.json(),
         }
       } else {
-        const text = await response.text()
-
         return {
-          ifUnauthorized: (handle) => { },
-          ifOk: (handle) => { },
-          ifNotOk: async (handle) => {
-            handle(text)
-          },
+          ok: false,
+          message: await response.text(),
         }
       }
     } catch (error) {
       return {
-        ifUnauthorized: (handle) => { },
-        ifOk: (handle) => { },
-        ifNotOk: (handle) => {
-          handle(error.message)
-        },
+        ok: false,
+        message: error.message,
       }
     }
   }
 
-  async function requestRevocationOfTokens({ tokens = {} }) {
+  async function requestDeauthorization({ tokens = {} }) {
     try {
       const endpoint = [
         'https://drop-drop-undrop.netlify.app/',
@@ -115,31 +97,17 @@ export default function Twitter() {
       const response = responses.find(({ status }) => status !== 200)
 
       if (!response) {
-        return {
-          ifUnauthorized: (handle) => { },
-          ifOk: async (handle) => {
-            handle()
-          },
-          ifNotOk: (handle) => { },
-        }
+        return { ok: true }
       } else {
-        const text = await response.text()
-
         return {
-          ifUnauthorized: (handle) => { },
-          ifOk: (handle) => { },
-          ifNotOk: async (handle) => {
-            handle(text)
-          },
+          ok: false,
+          message: await response.text(),
         }
       }
     } catch (error) {
       return {
-        ifUnauthorized: (handle) => { },
-        ifOk: (handle) => { },
-        ifNotOk: (handle) => {
-          handle(error.message)
-        },
+        ok: false,
+        message: error.message,
       }
     }
   }
@@ -158,43 +126,25 @@ export default function Twitter() {
       })
 
       if (response.status === 401) {
-        const text = await response.text()
-
         return {
-          ifUnauthorized: async (handle) => {
-            handle(text)
-          },
-          ifOk: (handle) => { },
-          ifNotOk: (handle) => { },
+          unauthorized: true,
+          message: await response.text(),
         }
       } else if (response.status === 200) {
-        const user = (await response.json()).data
-
         return {
-          ifUnauthorized: (handle) => { },
-          ifOk: async (handle) => {
-            handle(user)
-          },
-          ifNotOk: (handle) => { },
+          ok: true,
+          user: (await response.json()).data,
         }
       } else {
-        const text = await response.text()
-
         return {
-          ifUnauthorized: (handle) => { },
-          ifOk: (handle) => { },
-          ifNotOk: async (handle) => {
-            handle(text)
-          },
+          ok: false,
+          message: await response.text(),
         }
       }
     } catch (error) {
       return {
-        ifUnauthorized: (handle) => { },
-        ifOk: (handle) => { },
-        ifNotOk: (handle) => {
-          handle(error.message)
-        },
+        ok: false,
+        message: error.message,
       }
     }
   }
@@ -223,43 +173,25 @@ export default function Twitter() {
       })
 
       if (response.status === 401) {
-        const text = await response.text()
-
         return {
-          ifUnauthorized: async (handle) => {
-            handle(text)
-          },
-          ifOk: (handle) => { },
-          ifNotOk: (handle) => { },
+          unauthorized: true,
+          message: await response.text(),
         }
       } else if (response.status === 200) {
-        const isFollowing = (await response.json()).following
-
         return {
-          ifUnauthorized: (handle) => { },
-          ifOk: async (handle) => {
-            handle(isFollowing)
-          },
-          ifNotOk: (handle) => { },
+          ok: true,
+          isFollowing: (await response.json()).following,
         }
       } else {
-        const text = await response.text()
-
         return {
-          ifUnauthorized: (handle) => { },
-          ifOk: (handle) => { },
-          ifNotOk: async (handle) => {
-            handle(text)
-          },
+          ok: false,
+          message: await response.text(),
         }
       }
     } catch (error) {
       return {
-        ifUnauthorized: (handle) => { },
-        ifOk: (handle) => { },
-        ifNotOk: async (handle) => {
-          handle(error.message)
-        },
+        ok: false,
+        message: error.message,
       }
     }
   }
@@ -282,50 +214,32 @@ export default function Twitter() {
       })
 
       if (response.status === 401) {
-        const text = await response.text()
-
         return {
-          ifUnauthorized: async (handle) => {
-            handle(text)
-          },
-          ifOk: (handle) => { },
-          ifNotOk: (handle) => { },
+          unauthorized: true,
+          message: await response.text(),
         }
       } else if (response.status === 200) {
-        const isFollowing = (await response.json()).following
-
         return {
-          ifUnauthorized: (handle) => { },
-          ifOk: async (handle) => {
-            handle(isFollowing)
-          },
-          ifNotOk: (handle) => { },
+          ok: true,
+          isFollowing: (await response.json()).following,
         }
       } else {
-        const text = await response.text()
-
         return {
-          ifUnauthorized: (handle) => { },
-          ifOk: (handle) => { },
-          ifNotOk: async (handle) => {
-            handle(text)
-          },
+          ok: false,
+          message: await response.text(),
         }
       }
     } catch (error) {
       return {
-        ifUnauthorized: (handle) => { },
-        ifOk: (handle) => { },
-        ifNotOk: async (handle) => {
-          handle(await error.message)
-        },
+        ok: false,
+        message: error.message,
       }
     }
   }
 
   return {
     requestTokens,
-    requestRevocationOfTokens,
+    requestDeauthorization,
     requestUser,
     requestFollowingOfNasa,
     requestUnfollowingOfNasa,
